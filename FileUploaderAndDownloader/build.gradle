@@ -2,8 +2,6 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
-version = "1.0.0"
-
 android {
     compileSdkVersion 22
     buildToolsVersion "22.0.1"
@@ -33,7 +31,8 @@ def siteUrl = "https://github.com/houjinyun/hjy"
 def gitUrl = "https://github.com/houjinyun/hjy.git"
 
 //填写唯一包名
-group = "com.hjy"
+group = "com.hjy.library"
+version = "1.0.0"
 
 install {
     repositories.mavenInstaller {
@@ -84,6 +83,7 @@ task sourcesJar(type: Jar) {
 }*/
 
 task javadoc(type: Javadoc) {
+    options.encoding = 'UTF-8'
     source = android.sourceSets.main.java.srcDirs
     classpath += configurations.compile
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))

@@ -13,16 +13,16 @@ public interface OnDownloadingListener {
     /**
      * 下载失败
      *
-     * @param task
+     * @param task Downdload task
      * @param errorType DownloadErrorType
-     * @param msg
+     * @param msg 错误信息
      */
     public void onDownloadFailed(FileDownloadTask task, int errorType, String msg);
 
     /**
      * 下载成功
      *
-     * @param task
+     * @param task Download task
      * @param outFile 下载成功后的文件
      */
     public void onDownloadSucc(FileDownloadTask task, File outFile);

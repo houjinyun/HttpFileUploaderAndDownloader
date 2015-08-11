@@ -46,11 +46,6 @@ public class DownloadManager {
         mContext = context.getApplicationContext();
     }
 
-    /**
-     * 初始化
-     *
-     * @param downloadConfiguration
-     */
     public synchronized void init(DownloadConfiguration downloadConfiguration) {
         if(downloadConfiguration == null) {
             throw new IllegalArgumentException("DownloadConfiguration can not be null.");
@@ -67,9 +62,9 @@ public class DownloadManager {
     /**
      * 下载任务是否存在
      *
-     * @param id
-     * @param url
-     * @return
+     * @param id 任务id
+     * @param url 下载地址
+     * @return true表示正在下载
      */
     private boolean isTaskExists(String id, String url) {
         if(id == null)
@@ -118,8 +113,8 @@ public class DownloadManager {
     /**
      * 根据url生成缓存的文件名
      *
-     * @param url
-     * @return
+     * @param url 下载地址
+     * @return 缓存文件名称
      */
     private String generateCacheName(String url) {
         String name = url.hashCode() + "_" + System.currentTimeMillis();
@@ -129,9 +124,9 @@ public class DownloadManager {
     /**
      * 生成缓存的文件
      *
-     * @param url
+     * @param url 下载url
      * @param type 0-音频，1-视频，2-图片
-     * @return
+     * @return 缓存文件
      */
     private File generateCacheFile(String url, int type) {
         File cacheDir = mDownloadConfiguration.getCacheDir();

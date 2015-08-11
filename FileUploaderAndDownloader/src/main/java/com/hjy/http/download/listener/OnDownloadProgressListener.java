@@ -9,7 +9,7 @@ import com.hjy.http.download.FileDownloadTask;
 public interface OnDownloadProgressListener {
 
     /**
-     * @param downloadInfo
+     * @param downloadInfo 下载信息
      * @param current Downloaded size in bytes.
      * @param totalSize Total size in bytes.
      */

@@ -31,33 +31,15 @@ public class CustomHttpClient {
         return call;
     }
 
-    /**
-     * 取消某个请求
-     *
-     * @param tag
-     */
     public static void cancelRequest(String tag) {
         OK_HTTP_CLIENT.cancel(tag);
     }
 
-    /**
-     * 同步请求
-     *
-     * @param request
-     * @return
-     * @throws IOException
-     */
     public static Response execute(Request request) throws IOException {
         Call call = newCall(request);
         return call.execute();
     }
 
-    /**
-     * 异步请求
-     *
-     * @param request
-     * @param callback
-     */
     public static void executeAsync(Request request, com.squareup.okhttp.Callback callback) {
         Call call = newCall(request);
         call.enqueue(callback);
@@ -66,10 +48,10 @@ public class CustomHttpClient {
     /**
      * get请求
      *
-     * @param url
+     * @param url 地址
      * @param tag 标识该请求，可用于以后取消
      *
-     * @return
+     * @return 返回的字符串
      * @throws IOException
      */
     public static String doGet(String url, String tag) throws IOException {
@@ -89,11 +71,11 @@ public class CustomHttpClient {
     /**
      * post请求，表单提交方式
      *
-     * @param url
+     * @param url 地址
      * @param paramMap 参数列表
      * @param tag  标识该请求，可用于以后取消
      *
-     * @return
+     * @return 返回字符串
      * @throws IOException
      */
     public static String doPost(String url, Map<String, String> paramMap, String tag) throws IOException {
@@ -119,11 +101,11 @@ public class CustomHttpClient {
     /**
      * post请求
      *
-     * @param url
+     * @param url 地址
      * @param postBody json格式的字符串
      * @param tag 标识该请求，可用于以后取消
      *
-     * @return
+     * @return 返回的字符串
      * @throws IOException
      */
     public static String doPost(String url, String postBody, String tag) throws IOException {

@@ -8,7 +8,7 @@ public class HttpUtil {
     /**
      * 进行get请求
      *
-     * @param url
+     * @param url 地址
      * @param tag 标识该请求
      * @return
      */
@@ -25,8 +25,8 @@ public class HttpUtil {
     /**
      * 进行post请求，提交key-value参数
      *
-     * @param url
-     * @param params
+     * @param url 地址
+     * @param params 表单参数
      * @param tag 标识该请求
      * @return
      */
@@ -43,8 +43,8 @@ public class HttpUtil {
     /**
      * post提交json格式的数据
      *
-     * @param url
-     * @param postJsonBody
+     * @param url 地址
+     * @param postJsonBody 提交的json格式数据
      * @param tag 标识该请求
      * @return
      */
@@ -61,7 +61,7 @@ public class HttpUtil {
     /**
      * 取消某个请求
      *
-     * @param tag
+     * @param tag 标识
      */
     public static void cancelRequest(String tag) {
         CustomHttpClient.cancelRequest(tag);
