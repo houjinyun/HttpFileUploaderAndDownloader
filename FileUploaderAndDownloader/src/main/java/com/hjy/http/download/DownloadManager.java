@@ -122,6 +122,28 @@ public class DownloadManager {
         }
     }
 
+    /**
+     * 更新下载进度
+     *
+     * @param id taskId
+     * @param url 下载地址
+     * @param progressAware
+     */
+    public void updateProgress(String id, String url, ProgressAware progressAware) {
+        checkConfiguration();
+        synchronized (mTaskList) {
+            if(id == null)
+                id = "";
+            for(FileDownloadTask task : mTaskList) {
+                FileDownloadInfo downloadInfo = task.getFileDownloadInfo();
+                if(id.equals(downloadInfo.getId()) && url.equals(downloadInfo.getUrl())) {
+                    task.resetProgressAware(progressAware, mHandler);
+                    break;
+                }
+            }
+        }
+    }
+
     public void prepareUpdateProgressTaskFor(ProgressAware progressAware, String fileDownloadInfoId) {
         mCacheKeysForProgressAwares.put(progressAware.getId(), fileDownloadInfoId);
     }

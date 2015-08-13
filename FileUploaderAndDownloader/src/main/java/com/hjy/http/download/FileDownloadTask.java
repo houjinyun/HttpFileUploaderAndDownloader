@@ -1,5 +1,7 @@
 package com.hjy.http.download;
 
+import android.os.Handler;
+
 import com.hjy.http.CustomHttpClient;
 import com.hjy.http.download.listener.OnDownloadProgressListener;
 import com.hjy.http.download.listener.OnDownloadingListener;
@@ -23,6 +25,9 @@ public class FileDownloadTask implements Runnable {
     private OnDownloadProgressListener progressListener;
     private volatile ProgressAware progressAware;
 
+    private long currSize;
+    private long totalSize;
+
     /**
      * 是否同步加载
      */
@@ -44,6 +49,22 @@ public class FileDownloadTask implements Runnable {
         return isSyncLoading;
     }
 
+    public void resetProgressAware(final ProgressAware progressAware, Handler handler) {
+        this.progressAware = progressAware;
+        if(progressAware != null) {
+            long t = totalSize;
+            if(t == 0)
+                t = Integer.MAX_VALUE;
+            final int progress = (int)((currSize / (float) t) * 100);
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    progressAware.setProgress(progress);
+                }
+            });
+        }
+    }
+
     @Override
     public void run() {
         Request req = new Request.Builder()
@@ -63,6 +84,8 @@ public class FileDownloadTask implements Runnable {
                 while ((size = is.read(buffer)) != -1) {
                     fos.write(buffer, 0, size);
                     currentSize += size;
+                    this.currSize = currentSize;
+                    this.totalSize = contentLength;
                     if(progressListener != null) {
                         progressListener.onProgressUpdate(this, currentSize, contentLength);
                     }
