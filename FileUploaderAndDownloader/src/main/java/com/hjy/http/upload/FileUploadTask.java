@@ -28,6 +28,11 @@ public class FileUploadTask implements Runnable {
 
     private volatile boolean mCanceled;
 
+    /**
+     * 是否同步加载，默认为false
+     */
+    private boolean mSyncLoading = false;
+
     public FileUploadTask(FileUploadEngine engine, FileUploadInfo fileUploadInfo, ProgressAware progressAware, Handler handler) {
         mFileUploadEngine = engine;
         mFileUploadConfig = engine.getFileUploadConfiguration();
@@ -36,20 +41,24 @@ public class FileUploadTask implements Runnable {
         mHandler = handler;
     }
 
+    public void setSyncLoading(boolean syncLoading) {
+        mSyncLoading = syncLoading;
+    }
+
     public FileUploadInfo getFileUploadInfo() {
         return mFileUploadInfo;
     }
 
-    public void resetProgressAware(ProgressAware progressAware) {
+    public void resetProgressAware(final ProgressAware progressAware) {
         mProgressAware = progressAware;
-        if(mProgressAware != null) {
+        if(progressAware != null) {
             if(Looper.myLooper() == Looper.getMainLooper()) {
-                mProgressAware.setProgress(mCurrProgress);
+                progressAware.setProgress(mCurrProgress);
             } else {
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        mProgressAware.setProgress(mCurrProgress);
+                        progressAware.setProgress(mCurrProgress);
                     }
                 });
             }
@@ -132,74 +141,92 @@ public class FileUploadTask implements Runnable {
     private void fireFailEvent(final int errorType, final String errorMsg) {
         removeUploadTask();
 
-        mHandler.post(new Runnable() {
+        Runnable task = new Runnable() {
             @Override
             public void run() {
                 if (mFileUploadInfo.getApiCallback() != null) {
-                    if(mCanceled)
+                    if (mCanceled)
                         mFileUploadInfo.getApiCallback().onError(mFileUploadInfo, ErrorType.ERROR_TYPE_CANCELED, null);
                     else
                         mFileUploadInfo.getApiCallback().onError(mFileUploadInfo, errorType, errorMsg);
                 }
-                cancelUpdateProgressTask();
+                ProgressAware pa = mProgressAware;
+                cancelUpdateProgressTask(pa);
             }
-        });
+        };
+
+        runTask(task, null);
     }
 
     private void fireSuccessEvent(final Object result) {
         removeUploadTask();
-        mHandler.post(new Runnable() {
+        Runnable task = new Runnable() {
             @Override
             public void run() {
                 if(mFileUploadInfo.getApiCallback() != null) {
                     mFileUploadInfo.getApiCallback().onSuccess(mFileUploadInfo, result);
                 }
-
-                cancelUpdateProgressTask();
+                ProgressAware pa = mProgressAware;
+                cancelUpdateProgressTask(pa);
             }
-        });
+        };
+        runTask(task, null);
     }
 
     private void fireProgressEvent(final long totalSize, final long currSize, final int progress) {
         if(mFileUploadInfo.getProgressListener() == null && mProgressAware == null)
             return;
 
-        mHandler.post(new Runnable() {
+        Runnable task = new Runnable() {
             @Override
             public void run() {
                 if(mFileUploadInfo.getProgressListener() != null) {
                     mFileUploadInfo.getProgressListener().onProgress(totalSize, currSize, progress);
                 }
-                if(mProgressAware != null) {
-                    if(!isProgressViewCollected() && !isProgressViewReused()) {
-                        mProgressAware.setProgress(progress);
+                ProgressAware pa = mProgressAware;
+                if(pa != null) {
+                    if(!isProgressViewCollected(pa) && !isProgressViewReused(pa)) {
+                        pa.setProgress(progress);
                     } else {
                     }
                 }
             }
-        });
+        };
+        runTask(task, mHandler);
     }
 
-    private boolean isProgressViewCollected() {
-        if(mProgressAware.isCollected())
+    private void runTask(Runnable task, Handler handler) {
+        if(handler != null) {
+            handler.post(task);
+        } else {
+            if(mSyncLoading) {
+                task.run();
+            } else {
+                mHandler.post(task);
+            }
+        }
+    }
+
+    private boolean isProgressViewCollected(ProgressAware progressAware) {
+        if(progressAware.isCollected())
             return true;
         return false;
     }
 
-    private boolean isProgressViewReused() {
-        String currentFileUploadId = mFileUploadEngine.getFileUploadInfoIdForProgressAware(mProgressAware);
+    private boolean isProgressViewReused(ProgressAware progressAware) {
+        String currentFileUploadId = mFileUploadEngine.getFileUploadInfoIdForProgressAware(progressAware);
         if(!mFileUploadInfo.getId().equals(currentFileUploadId))
             return true;
         return false;
     }
 
-    private void cancelUpdateProgressTask() {
-        if(mProgressAware != null) {
-            if(isProgressViewCollected()) {
-                mFileUploadEngine.cancelUpdateProgressTaskFor(mProgressAware);
+    private void cancelUpdateProgressTask(ProgressAware progressAware) {
+        if(progressAware != null) {
+            if(isProgressViewCollected(progressAware)) {
+                mFileUploadEngine.cancelUpdateProgressTaskFor(progressAware);
             } else {
-                if(!isProgressViewReused()) {
-                    mFileUploadEngine.cancelUpdateProgressTaskFor(mProgressAware);
+                if(!isProgressViewReused(progressAware)) {
+                    mFileUploadEngine.cancelUpdateProgressTaskFor(progressAware);
                 }
             }
         }

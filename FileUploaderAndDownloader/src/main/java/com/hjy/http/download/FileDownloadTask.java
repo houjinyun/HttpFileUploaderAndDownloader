@@ -3,6 +3,7 @@ package com.hjy.http.download;
 import com.hjy.http.CustomHttpClient;
 import com.hjy.http.download.listener.OnDownloadProgressListener;
 import com.hjy.http.download.listener.OnDownloadingListener;
+import com.hjy.http.upload.progressaware.ProgressAware;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
@@ -10,21 +11,37 @@ import com.squareup.okhttp.ResponseBody;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.logging.Logger;
 
 /**
  * Created by hjy on 8/5/15.<br>
  */
 public class FileDownloadTask implements Runnable {
 
+    private DownloadManager downloadManager;
     private FileDownloadInfo fileDownloadInfo;
     private OnDownloadingListener downloadingListener;
     private OnDownloadProgressListener progressListener;
+    private volatile ProgressAware progressAware;
 
-    public FileDownloadTask(FileDownloadInfo fileDownloadInfo) {
+    /**
+     * 是否同步加载
+     */
+    private boolean isSyncLoading = false;
+
+    public FileDownloadTask(FileDownloadInfo fileDownloadInfo, DownloadManager downloadManager, ProgressAware progressAware) {
         this.fileDownloadInfo = fileDownloadInfo;
         downloadingListener = fileDownloadInfo.getOnDownloadingListener();
         progressListener = fileDownloadInfo.getOnDownloadProgressListener();
+        this.downloadManager = downloadManager;
+        this.progressAware = progressAware;
+    }
+
+    public void setSyncLoading(boolean isSyncLoading) {
+        this.isSyncLoading = isSyncLoading;
+    }
+
+    public boolean isSyncLoading() {
+        return isSyncLoading;
     }
 
     @Override
@@ -64,6 +81,10 @@ public class FileDownloadTask implements Runnable {
                 downloadingListener.onDownloadFailed(this, DownloadErrorType.ERROR_NETWORK, e.getMessage());
         }
 
+        ProgressAware pa = progressAware;
+        if(pa != null) {
+            downloadManager.cancelUpdateProgressTaskFor(pa);
+        }
     }
 
     private String generateTag(FileDownloadInfo fileDownloadInfo) {
@@ -73,4 +94,27 @@ public class FileDownloadTask implements Runnable {
     public FileDownloadInfo getFileDownloadInfo() {
         return fileDownloadInfo;
     }
+
+    private boolean isProgressViewCollected(ProgressAware pa) {
+        if(pa.isCollected())
+            return true;
+        return false;
+    }
+
+    private boolean isProgressViewReused(ProgressAware pa) {
+        String downloadTaskId = downloadManager.getFileDownloadInfoIdForProgressAware(pa);
+        if(!fileDownloadInfo.getId().equals(downloadTaskId))
+            return true;
+        return false;
+    }
+
+    public void updateProgress(int progress) {
+        ProgressAware pa = progressAware;
+        if(pa != null) {
+            if(!isProgressViewCollected(pa) && !isProgressViewReused(pa)) {
+                pa.setProgress(progress);
+            }
+        }
+    }
+
 }

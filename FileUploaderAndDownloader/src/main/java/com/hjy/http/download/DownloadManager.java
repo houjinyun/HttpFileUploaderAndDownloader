@@ -6,6 +6,7 @@ import android.os.Looper;
 
 import com.hjy.http.download.listener.OnDownloadProgressListener;
 import com.hjy.http.download.listener.OnDownloadingListener;
+import com.hjy.http.upload.progressaware.ProgressAware;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -41,6 +42,12 @@ public class DownloadManager {
     private Map<FileDownloadTask, OnDownloadProgressListener> mProgressMap = Collections.synchronizedMap(new HashMap<FileDownloadTask, OnDownloadProgressListener>());
 
     private Handler mHandler = new Handler(Looper.getMainLooper());
+
+    /**
+     * 如果需要显示下载进度条时，key为ProgressAware.getId()，value为FileDownloadInfo.id
+     */
+    private Map<Integer, String> mCacheKeysForProgressAwares = Collections.synchronizedMap(new HashMap<Integer, String>());
+
 
     private DownloadManager(Context context) {
         mContext = context.getApplicationContext();
@@ -78,36 +85,84 @@ public class DownloadManager {
         return false;
     }
 
+    public void downloadFile(int type, String id, String url, OnDownloadingListener downloadingListener) {
+        downloadFile(type, id, url, downloadingListener,null);
+    }
+
+    public void downloadFile(int type, String id, String url, OnDownloadingListener downloadingListener, OnDownloadProgressListener downloadProgressListener) {
+        downloadFile(type, id, url, null, downloadingListener, downloadProgressListener);
+    }
+
     /**
+     * 下载文件
      *
      * @param type FileType
-     * @param id
-     * @param url
+     * @param id 任务id，自己生成，必须保证唯一
+     * @param url 下载地址
      * @param downloadingListener
      * @param downloadProgressListener
      */
-    public void downloadFile(int type, String id, String url, OnDownloadingListener downloadingListener, OnDownloadProgressListener downloadProgressListener) {
+    public void downloadFile(int type, String id, String url, ProgressAware progressAware, OnDownloadingListener downloadingListener, OnDownloadProgressListener downloadProgressListener) {
         checkConfiguration();
         synchronized (mTaskList) {
             if(isTaskExists(id, url))
                 return;
             File cacheFile = generateCacheFile(url, type);
             FileDownloadInfo downloadInfo = new FileDownloadInfo(id, url, cacheFile, mOnDownloadDispatcher, mOnDwonloadProgressDispatcher);
-            FileDownloadTask task = new FileDownloadTask(downloadInfo);
+            FileDownloadTask task = new FileDownloadTask(downloadInfo, this, progressAware);
             mTaskList.add(task);
             if(downloadingListener != null)
                 mDowndloadingMap.put(task, downloadingListener);
             if(downloadProgressListener != null)
                 mProgressMap.put(task, downloadProgressListener);
+            if(progressAware != null) {
+                prepareUpdateProgressTaskFor(progressAware, downloadInfo.getId());
+            }
             mDownloadConfiguration.getTaskExecutor().execute(task);
         }
     }
 
-    public void downloadFileSync(File cacheFile, String id, String url, OnDownloadingListener downloadingListener, OnDownloadProgressListener progressListener) {
+    public void prepareUpdateProgressTaskFor(ProgressAware progressAware, String fileDownloadInfoId) {
+        mCacheKeysForProgressAwares.put(progressAware.getId(), fileDownloadInfoId);
+    }
+
+    public void cancelUpdateProgressTaskFor(ProgressAware progressAware) {
+        mCacheKeysForProgressAwares.remove(progressAware.getId());
+    }
+
+    public String getFileDownloadInfoIdForProgressAware(ProgressAware progressAware) {
+        return mCacheKeysForProgressAwares.get(progressAware.getId());
+    }
+
+
+    public File downloadFileSync(String id, String url) {
+        File cacheFile = generateCacheFile(url, FileType.TYPE_OTHER);
+        return downloadFileSync(cacheFile, id, url);
+    }
+
+    public File downloadFileSync(File cacheFile, String id, String url) {
+        return downloadFileSync(cacheFile, id, url, null);
+    }
+
+    public File downloadFileSync(File cacheFile, String id, String url, OnDownloadProgressListener progressListener) {
+        return downloadFileSync(cacheFile, id, url, null, progressListener);
+    }
+
+    /**
+     * 同步下载方法
+     *
+     */
+    public File downloadFileSync(File cacheFile, String id, String url, ProgressAware progressAware, OnDownloadProgressListener progressListener) {
         checkConfiguration();
-        FileDownloadInfo downloadInfo = new FileDownloadInfo(id, url, cacheFile, downloadingListener, progressListener);
-        FileDownloadTask task = new FileDownloadTask(downloadInfo);
+        SyncDownloadLister syncDownloadLister = new SyncDownloadLister();
+        FileDownloadInfo downloadInfo = new FileDownloadInfo(id, url, cacheFile, syncDownloadLister, progressListener);
+        FileDownloadTask task = new FileDownloadTask(downloadInfo, this, progressAware);
+        task.setSyncLoading(true);
+        mDowndloadingMap.put(task, syncDownloadLister);
+        if(progressListener != null)
+            mProgressMap.put(task, progressListener);
         task.run();
+        return syncDownloadLister.getResult();
     }
 
     /**
@@ -150,37 +205,46 @@ public class DownloadManager {
     private OnDownloadingListener mOnDownloadDispatcher = new OnDownloadingListener() {
         @Override
         public void onDownloadFailed(final FileDownloadTask downloadInfo, final int errorType, final String msg) {
-            final OnDownloadingListener downloadingListener = mDowndloadingMap.get(downloadInfo);
-            if(downloadingListener != null) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        downloadingListener.onDownloadFailed(downloadInfo, errorType, msg);
-                    }
-                });
-            }
             mDowndloadingMap.remove(downloadInfo);
             mProgressMap.remove(downloadInfo);
             synchronized (mTaskList) {
                 mTaskList.remove(downloadInfo);
+            }
+
+            final OnDownloadingListener downloadingListener = mDowndloadingMap.get(downloadInfo);
+            if(downloadingListener != null) {
+                if(downloadInfo.isSyncLoading()) {
+                    downloadingListener.onDownloadFailed(downloadInfo, errorType, msg);
+                } else {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            downloadingListener.onDownloadFailed(downloadInfo, errorType, msg);
+                        }
+                    });
+                }
             }
         }
 
         @Override
         public void onDownloadSucc(final FileDownloadTask downloadInfo, final File outFile) {
-            final OnDownloadingListener downloadingListener = mDowndloadingMap.get(downloadInfo);
-            if(downloadingListener != null) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        downloadingListener.onDownloadSucc(downloadInfo, outFile);
-                    }
-                });
-            }
             mDowndloadingMap.remove(downloadInfo);
             mProgressMap.remove(downloadInfo);
             synchronized (mTaskList) {
                 mTaskList.remove(downloadInfo);
+            }
+            final OnDownloadingListener downloadingListener = mDowndloadingMap.get(downloadInfo);
+            if(downloadingListener != null) {
+                if(downloadInfo.isSyncLoading()) {
+                    downloadingListener.onDownloadSucc(downloadInfo, outFile);
+                } else {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            downloadingListener.onDownloadSucc(downloadInfo, outFile);
+                        }
+                    });
+                }
             }
         }
     };
@@ -190,9 +254,14 @@ public class DownloadManager {
         public void onProgressUpdate(final FileDownloadTask fileDownloadInfo, final long current, final long totalSize) {
             final OnDownloadProgressListener progressListener = mProgressMap.get(fileDownloadInfo);
             if (progressListener != null) {
+                long t = totalSize;
+                if(t == 0)
+                    t = 1;
+                final int progress = (int)((current / (float) t) * 100);
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
+                        fileDownloadInfo.updateProgress(progress);
                         progressListener.onProgressUpdate(fileDownloadInfo, current, totalSize);
                     }
                 });
@@ -200,5 +269,25 @@ public class DownloadManager {
         }
 
     };
+
+    private class SyncDownloadLister implements OnDownloadingListener {
+
+        private File result = null;
+
+        @Override
+        public void onDownloadFailed(FileDownloadTask task, int errorType, String msg) {
+
+        }
+
+        @Override
+        public void onDownloadSucc(FileDownloadTask task, File outFile) {
+            result = task.getFileDownloadInfo().getOutFile();
+        }
+
+        public File getResult() {
+            return result;
+        }
+
+    }
 
 }

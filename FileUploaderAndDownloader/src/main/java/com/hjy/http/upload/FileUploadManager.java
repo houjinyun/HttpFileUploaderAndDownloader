@@ -134,6 +134,7 @@ public class FileUploadManager {
         SyncUploadListener listener = new SyncUploadListener();
         FileUploadInfo fileUploadInfo = createFileUploadInfo(paramMap, id, filePath, mimeType, url, listener, uploadProgressListener, options);
         FileUploadTask fileUploadTask = new FileUploadTask(mFileUploadEngine, fileUploadInfo, progressAware, mHandler);
+        fileUploadTask.setSyncLoading(true);
         fileUploadTask.run();
         return listener.getResult();
     }
