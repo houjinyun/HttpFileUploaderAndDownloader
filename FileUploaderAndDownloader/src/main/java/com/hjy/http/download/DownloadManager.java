@@ -227,13 +227,12 @@ public class DownloadManager {
     private OnDownloadingListener mOnDownloadDispatcher = new OnDownloadingListener() {
         @Override
         public void onDownloadFailed(final FileDownloadTask downloadInfo, final int errorType, final String msg) {
-            mDowndloadingMap.remove(downloadInfo);
+            final OnDownloadingListener downloadingListener = mDowndloadingMap.remove(downloadInfo);
             mProgressMap.remove(downloadInfo);
             synchronized (mTaskList) {
                 mTaskList.remove(downloadInfo);
             }
 
-            final OnDownloadingListener downloadingListener = mDowndloadingMap.get(downloadInfo);
             if(downloadingListener != null) {
                 if(downloadInfo.isSyncLoading()) {
                     downloadingListener.onDownloadFailed(downloadInfo, errorType, msg);
@@ -250,12 +249,11 @@ public class DownloadManager {
 
         @Override
         public void onDownloadSucc(final FileDownloadTask downloadInfo, final File outFile) {
-            mDowndloadingMap.remove(downloadInfo);
+            final OnDownloadingListener downloadingListener = mDowndloadingMap.remove(downloadInfo);
             mProgressMap.remove(downloadInfo);
             synchronized (mTaskList) {
                 mTaskList.remove(downloadInfo);
             }
-            final OnDownloadingListener downloadingListener = mDowndloadingMap.get(downloadInfo);
             if(downloadingListener != null) {
                 if(downloadInfo.isSyncLoading()) {
                     downloadingListener.onDownloadSucc(downloadInfo, outFile);
