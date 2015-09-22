@@ -1,10 +1,13 @@
 package com.hjy.http.upload.uploader;
 
 
+import android.text.TextUtils;
+
 import com.hjy.http.CustomHttpClient;
 import com.hjy.http.upload.FileUploadInfo;
 import com.hjy.http.upload.listener.OnFileTransferredListener;
 import com.squareup.okhttp.Headers;
+import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.MultipartBuilder;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
@@ -33,9 +36,18 @@ public class OKHttpUploader extends BaseUploader {
             }
         }
 
-        RequestBody requestBody = multipartBuilder.addPart(
+        String mimeType = fileUploadInfo.getMimeType();
+        if(TextUtils.isEmpty(mimeType))
+            mimeType = "";
+        multipartBuilder.addPart(Headers.of("Content-Disposition", "form-data; name=\"file\"; filename=\"" + file.getName() + "\""),
+                RequestBody.create(MediaType.parse(mimeType), file));
+        RequestBody multipartBody = multipartBuilder.build();
+        RequestBody requestBody = new ProgressRequestBody(multipartBody, fileTransferredListener);
+
+/*        RequestBody requestBody = multipartBuilder.addPart(
                 Headers.of("Content-Disposition", "form-data; name=\"file\"; filename=\"" + file.getName() + "\""),
-                new CountingFileRequestBody(file, fileUploadInfo.getMimeType(), fileTransferredListener)).build();
+                new CountingFileRequestBody(file, fileUploadInfo.getMimeType(), fileTransferredListener)).build();*/
+
         Request request = new Request.Builder()
                 .tag(generateTag(fileUploadInfo))
                 .url(fileUploadInfo.getUrl())

@@ -22,15 +22,14 @@ public class DefaultConfigurationFactory {
     /**
      * 创建线程池
      *
-     * @param corePoolSize
-     * @param maxPoolSize
+     * @param poolSize
      * @param threadPriority
      * @return
      */
-    public static ExecutorService createExecutor(int corePoolSize, int maxPoolSize, int threadPriority) {
+    public static ExecutorService createExecutor(int poolSize, int threadPriority) {
         BlockingDeque<Runnable> taskQueue = new LinkedBlockingDeque<Runnable>();
         ThreadFactory threadFactory = creadDefaultThreadFactory(threadPriority);
-        return new ThreadPoolExecutor(corePoolSize, maxPoolSize, 0, TimeUnit.MILLISECONDS, taskQueue, threadFactory);
+        return new ThreadPoolExecutor(poolSize, poolSize, 30, TimeUnit.MILLISECONDS, taskQueue, threadFactory);
     }
 
     public static BaseUploader createDefaultUploader() {

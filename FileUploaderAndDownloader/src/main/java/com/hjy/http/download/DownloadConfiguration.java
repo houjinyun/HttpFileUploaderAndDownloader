@@ -52,8 +52,7 @@ public class DownloadConfiguration {
      */
     public static class Builder {
 
-        public static final int DEFAULT_THREAD_POOL_CORE_SIZE = 3;
-        public static final int DEFAULT_THREAD_POOL_MAX_SIZE = 6;
+        public static final int DEFAULT_THREAD_POOL_SIZE = 3;
         public static final int DEFAULT_THREAD_PRIORITY = Thread.NORM_PRIORITY - 1;
 
         private Context context;
@@ -61,8 +60,7 @@ public class DownloadConfiguration {
         private boolean isCustomExecutor;
         private File cacheDir;
 
-        private int threadPoolCoreSize = DEFAULT_THREAD_POOL_CORE_SIZE;
-        private int threadPoolMaxSize = DEFAULT_THREAD_POOL_MAX_SIZE;
+        private int threadPoolSize = DEFAULT_THREAD_POOL_SIZE;
         private int threadPriority = DEFAULT_THREAD_PRIORITY;
 
         public Builder(Context context) {
@@ -83,15 +81,7 @@ public class DownloadConfiguration {
             if(taskExecutor != null) {
                 Log.d(TAG, "Call this no use because taskExecutor is not null.");
             }
-            this.threadPoolCoreSize = size;
-            return this;
-        }
-
-        public Builder setThreadPoolMaxSize(int size) {
-            if(taskExecutor != null) {
-                Log.d(TAG, "Call this no use because taskExecutor is not null.");
-            }
-            this.threadPoolMaxSize = size;
+            this.threadPoolSize = size;
             return this;
         }
 
@@ -126,7 +116,7 @@ public class DownloadConfiguration {
          */
         private void initEmptyFieldsWithDefaultValues() {
             if(taskExecutor == null) {
-                taskExecutor = DefaultConfigurationFactory.createExecutor(threadPoolCoreSize, threadPoolMaxSize, threadPriority);
+                taskExecutor = DefaultConfigurationFactory.createExecutor(threadPoolSize, threadPriority);
             } else {
                 isCustomExecutor = true;
             }
