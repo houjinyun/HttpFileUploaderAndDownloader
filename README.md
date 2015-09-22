@@ -12,5 +12,5 @@
 
 #怎样使用
     compile 'com.squareup.okhttp:okhttp:2.3.0'
-    compile 'com.hjy.library:FileUploaderAndDownloader:1.0.4'
+    compile 'com.hjy.library:FileUploaderAndDownloader:1.0.5'
 
