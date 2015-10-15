@@ -12,8 +12,8 @@
     7.基本的http请求工具包，如post请求、get请求
 
 ##Gradle
-    compile 'com.squareup.okhttp:okhttp:2.3.0'
-    compile 'com.hjy.library:FileUploaderAndDownloader:1.0.5'
+    compile 'com.squareup.okhttp:okhttp:2.5.0'
+    compile 'com.hjy.library:FileUploaderAndDownloader:1.0.6'
 
 ##使用方法
 

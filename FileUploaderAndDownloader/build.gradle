@@ -24,7 +24,7 @@ android {
 }
 
 dependencies {
-    compile 'com.squareup.okhttp:okhttp:2.3.0'
+    compile 'com.squareup.okhttp:okhttp:2.5.0'
 }
 
 def siteUrl = "https://github.com/houjinyun/hjy"
@@ -32,7 +32,7 @@ def gitUrl = "https://github.com/houjinyun/hjy.git"
 
 //填写唯一包名
 group = "com.hjy.library"
-version = "1.0.5"
+version = "1.0.6"
 
 install {
     repositories.mavenInstaller {
