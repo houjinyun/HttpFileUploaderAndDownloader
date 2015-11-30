@@ -13,7 +13,7 @@
 
 ##Gradle
     compile 'com.squareup.okhttp:okhttp:2.5.0'
-    compile 'com.hjy.library:FileUploaderAndDownloader:1.0.6'
+    compile 'com.hjy.library:FileUploaderAndDownloader:1.0.7'
 
 ##使用方法
 
