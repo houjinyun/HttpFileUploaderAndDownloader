@@ -44,13 +44,10 @@ public class OKHttpUploader extends BaseUploader {
         RequestBody multipartBody = multipartBuilder.build();
         RequestBody requestBody = new ProgressRequestBody(multipartBody, fileTransferredListener);
 
-/*        RequestBody requestBody = multipartBuilder.addPart(
-                Headers.of("Content-Disposition", "form-data; name=\"file\"; filename=\"" + file.getName() + "\""),
-                new CountingFileRequestBody(file, fileUploadInfo.getMimeType(), fileTransferredListener)).build();*/
-
         Request request = new Request.Builder()
                 .tag(generateTag(fileUploadInfo))
                 .url(fileUploadInfo.getUrl())
+                .header("Content-Type", fileUploadInfo.getMimeType())
                 .post(requestBody)
                 .build();
 
