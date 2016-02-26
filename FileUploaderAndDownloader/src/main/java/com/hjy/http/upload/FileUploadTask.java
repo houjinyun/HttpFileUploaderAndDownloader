@@ -122,7 +122,7 @@ public class FileUploadTask implements Runnable {
                     return;
 
                 if(result.isSuccessful()) {
-                    fireSuccessEvent(result.data);
+                    fireSuccessEvent(result);
                 } else {
                     fireFailEvent(ErrorType.ERROR_TYPE_BUSINESS_LOGIC_ERROR, result.getMsg());
                 }
@@ -158,13 +158,13 @@ public class FileUploadTask implements Runnable {
         runTask(task, null);
     }
 
-    private void fireSuccessEvent(final Object result) {
+    private void fireSuccessEvent(final ParserResult result) {
         removeUploadTask();
         Runnable task = new Runnable() {
             @Override
             public void run() {
                 if(mFileUploadInfo.getApiCallback() != null) {
-                    mFileUploadInfo.getApiCallback().onSuccess(mFileUploadInfo, result);
+                    mFileUploadInfo.getApiCallback().onSuccess(mFileUploadInfo, result.data);
                 }
                 ProgressAware pa = mProgressAware;
                 cancelUpdateProgressTask(pa);
