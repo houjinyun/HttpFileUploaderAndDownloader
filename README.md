@@ -13,7 +13,7 @@
 
 ##Gradle
     compile 'com.squareup.okhttp:okhttp:2.5.0'
-    compile 'com.hjy.library:FileUploaderAndDownloader:1.0.7'
+    compile 'com.hjy.library:FileUploaderAndDownloader:1.0.8'
 
 ##使用方法
 
@@ -27,30 +27,27 @@ __使用HttpUtil.java类__
  * 进行get请求  
  *  
  * @param url 请求地址  
- * @param tag 标识该请求  
  * @return  
  */
-public static String get(String url, String tag)  
+public static String get(String url)  
 
 /**  
  * 进行post请求，提交key-value键值对参数  
  *  
  * @param url 请求地址  
  * @param params 表单参数  
- * @param tag 标识该请求  
  * @return  
  */  
-public static String post(String url, Map<String, String> params, String tag)  
+public static String postForm(String url, Map<String, String> params)  
 
 /**  
  * post提交json格式的数据  
  *  
  * @param url 地址  
  * @param postJsonBody 提交的json格式数据  
- * @param tag 标识该请求  
  * @return  
  */  
-public static String post(String url, String postJsonBody, String tag)  
+public static String postJson(String url, String postJsonBody)  
 
 /**  
  * 取消某个请求  
