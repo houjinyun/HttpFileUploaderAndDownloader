@@ -6,13 +6,14 @@ import com.hjy.http.CustomHttpClient;
 import com.hjy.http.download.listener.OnDownloadProgressListener;
 import com.hjy.http.download.listener.OnDownloadingListener;
 import com.hjy.http.upload.progressaware.ProgressAware;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
  * Created by hjy on 8/5/15.<br>
@@ -67,10 +68,19 @@ public class FileDownloadTask implements Runnable {
 
     @Override
     public void run() {
-        Request req = new Request.Builder()
-                .url(fileDownloadInfo.getUrl())
-                .tag(generateTag(fileDownloadInfo))
-                .build();
+        Request req = null;
+        try {
+            req = new Request.Builder()
+                    .url(fileDownloadInfo.getUrl())
+                    .tag(generateTag(fileDownloadInfo))
+                    .build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            //url非法
+            if(downloadingListener != null)
+                downloadingListener.onDownloadFailed(this, DownloadErrorType.ERROR_URL_INVALID, e.getMessage());
+            return;
+        }
         try {
             Response resp = CustomHttpClient.execute(req);
             if(resp.isSuccessful()) {

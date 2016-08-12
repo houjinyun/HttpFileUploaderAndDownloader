@@ -1,10 +1,11 @@
 package com.hjy.http;
 
-import com.squareup.okhttp.Callback;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+
+import okhttp3.Callback;
 
 public class HttpUtil {
 

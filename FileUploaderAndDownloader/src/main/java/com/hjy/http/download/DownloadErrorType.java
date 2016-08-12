@@ -5,8 +5,10 @@ package com.hjy.http.download;
  */
 public class DownloadErrorType {
 
-    public static int ERROR_NETWORK = 0;
+    public static int ERROR_NETWORK = 0;            //网络错误
 
-    public static int ERROR_OTHER = 1;
+    public static int ERROR_URL_INVALID = 1;        //url非法
+
+    public static int ERROR_OTHER = 2;
 
 }

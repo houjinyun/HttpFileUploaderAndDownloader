@@ -1,5 +1,5 @@
 ##关于
-    仅用于Android上开发关于文件上传、下载功能的开发工具包，采用了OkHttp作为http底层请求处理。
+    仅用于Android上开发关于文件上传、下载功能的开发工具包，采用了OkHttp3作为http底层请求处理。
     Licence: Apache-2.0
 
 ##功能
@@ -12,8 +12,7 @@
     7.基本的http请求工具包，如post请求、get请求
 
 ##Gradle
-    compile 'com.squareup.okhttp:okhttp:2.5.0'
-    compile 'com.hjy.library:FileUploaderAndDownloader:1.0.8'
+    compile 'com.hjy.library:FileUploaderAndDownloader:1.1.0'
 
 ##使用方法
 

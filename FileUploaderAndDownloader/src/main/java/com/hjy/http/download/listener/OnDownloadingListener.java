@@ -14,7 +14,7 @@ public interface OnDownloadingListener {
      * 下载失败
      *
      * @param task Downdload task
-     * @param errorType DownloadErrorType
+     * @param errorType {@link com.hjy.http.download.DownloadErrorType}
      * @param msg 错误信息
      */
     public void onDownloadFailed(FileDownloadTask task, int errorType, String msg);

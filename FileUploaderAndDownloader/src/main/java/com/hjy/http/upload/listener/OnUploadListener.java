@@ -12,7 +12,7 @@ public interface OnUploadListener<T> {
      * 上传失败
      *
      * @param uploadData
-     * @param errorType
+     * @param errorType {@link com.hjy.http.upload.ErrorType}
      * @param msg
      */
     public void onError(FileUploadInfo uploadData, int errorType, String msg);

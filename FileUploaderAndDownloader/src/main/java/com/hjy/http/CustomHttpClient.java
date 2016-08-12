@@ -1,17 +1,20 @@
 package com.hjy.http;
 
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.FormEncodingBuilder;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 /**
  * @author houjinyun
@@ -20,11 +23,13 @@ public class CustomHttpClient {
 
     private static final int DEFAULT_CONN_TIMEOUT = 30;
 
-    private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
+    private static final OkHttpClient OK_HTTP_CLIENT;
 
     static {
-        OK_HTTP_CLIENT.setConnectTimeout(DEFAULT_CONN_TIMEOUT, TimeUnit.SECONDS);
-        OK_HTTP_CLIENT.setReadTimeout(DEFAULT_CONN_TIMEOUT, TimeUnit.SECONDS);
+        OK_HTTP_CLIENT = new OkHttpClient.Builder()
+                .connectTimeout(DEFAULT_CONN_TIMEOUT, TimeUnit.SECONDS)
+                .readTimeout(DEFAULT_CONN_TIMEOUT, TimeUnit.SECONDS)
+                .build();
     }
 
     private static Call newCall(Request request) {
@@ -33,7 +38,25 @@ public class CustomHttpClient {
     }
 
     public static void cancelRequest(String tag) {
-        OK_HTTP_CLIENT.cancel(tag);
+        if(tag == null)
+            return;
+
+        List<Call> list = OK_HTTP_CLIENT.dispatcher().runningCalls();
+        if(list != null) {
+            for(Call call : list) {
+                if(tag.equals(call.request().tag())) {
+                    call.cancel();
+                }
+            }
+        }
+        list = OK_HTTP_CLIENT.dispatcher().queuedCalls();
+        if(list != null) {
+            for(Call call : list) {
+                if(tag.equals(call.request().tag())) {
+                    call.cancel();
+                }
+            }
+        }
     }
 
     public static Response execute(Request request) throws IOException {
@@ -41,7 +64,7 @@ public class CustomHttpClient {
         return call.execute();
     }
 
-    public static void executeAsync(Request request, com.squareup.okhttp.Callback callback) {
+    public static void executeAsync(Request request, Callback callback) {
         Call call = newCall(request);
         call.enqueue(callback);
     }
@@ -88,7 +111,7 @@ public class CustomHttpClient {
      * @param callback 回调
      *
      */
-    public static void doGetAsync(String url, Map<String, String> headers, String tag, com.squareup.okhttp.Callback callback){
+    public static void doGetAsync(String url, Map<String, String> headers, String tag, Callback callback){
         executeAsync(buildRequest(url, headers, tag), callback);
     }
 
@@ -120,7 +143,7 @@ public class CustomHttpClient {
                 builder.header(entry.getKey(), entry.getValue());
             }
         }
-        FormEncodingBuilder bodyBuilder = new FormEncodingBuilder();
+        FormBody.Builder bodyBuilder = new FormBody.Builder();
         if(paramMap != null) {
             for(Map.Entry<String, String> entry : paramMap.entrySet()) {
                 String key = entry.getKey();
@@ -162,7 +185,7 @@ public class CustomHttpClient {
      * @param tag  标识该请求，可用于以后取消
      * @param callback 回调
      */
-    public static void doPostAsync(String url, Map<String, String> headers,  Map<String, String> paramMap, String tag, com.squareup.okhttp.Callback callback){
+    public static void doPostAsync(String url, Map<String, String> headers,  Map<String, String> paramMap, String tag, Callback callback){
         Request request = buildFormRequest(url, headers, paramMap, tag);
         executeAsync(request, callback);
     }
@@ -211,7 +234,7 @@ public class CustomHttpClient {
      * @param tag 标识该请求，可用于以后取消
      * @param callback 回调
      */
-    public static void doPostAsync(String url, Map<String, String> headers, String postBody, String tag, com.squareup.okhttp.Callback callback) {
+    public static void doPostAsync(String url, Map<String, String> headers, String postBody, String tag, Callback callback) {
         executeAsync(buildJsonRequest(url, headers, postBody, tag), callback);
     }
 
